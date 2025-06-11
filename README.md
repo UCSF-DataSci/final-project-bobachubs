@@ -1,68 +1,91 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/lqRvusMP)
-[![Open in Codespaces](https://classroom.github.com/assets/launch-codespace-2972f46106e565e64193e422d61a12cf1da4916b45550586e14ef0a7c637dd04.svg)](https://classroom.github.com/open-in-codespaces?assignment_repo_id=19681798)
-# Final Project
+# EEG Motor Imagery Classification: Evaluating ICA-Based Artifact Removal
 
-The final assignment for this class is a multi-week project. The project is self-driven but the expectation is that you will work in groups to demonstrate your ability to do something original with your newfound pythonic abilities.
+**Author:** Sarah Li - DataSci 223
 
-It’s up to you, but some suggestions include:
+## Overview
+This project evaluates whether Independent Component Analysis (ICA) preprocessing improves classification accuracy for EEG motor imagery tasks using the PhysioNet EEGMMIDB dataset.
 
-- Testing ideas for your Capstone project
-- Replicating/extending analysis done in a published paper
-- Working with an existing codebase/model to apply an interesting ML method
-- Performing a novel analysis on a dataset
+## Repository Contents
+```
+├── README.md                   # This file
+├── Project.ipynb               # Complete analysis pipeline
+├── requirements.txt            # Python dependencies
+├── FinalReport.pdf             # Detailed project report
+└── FinalPresentation.pptx/     # Presenation Explanation
+```
 
-## Expectations
+## Dataset
+- **Source**: PhysioNet EEG Motor Movement/Imagery Database (EEGMMIDB)
+- **Subjects**: 4 (subset for computational efficiency)
+- **Classes**: Rest, Left fist, Right fist, Feet movement imagery
+- **Channels**: 64 EEG electrodes (10-20 montage)
+- **Sample Rate**: 160 Hz
 
-- This should involve original work from your team (size of group: anywhere between 1-38)
-- Level of effort take 2-3 weeks of your work
-- Submission will be a repository including:
-    - Code: your own and perhaps from an existing project
-    - Documentation (any format: markdown, pdf, word, video, presentation)
-        - Who worked on the project, if not just yourself
-        - Overview of the problem
-        - Description of the dataset you used (input features, outcome,dimensions, etc)
-        - Tools/methods used
-        - Decisions made along the way, including trade-offs e.g., cut X for time so our solution may lack Y)
-        - Issues overcome along the way
-        - How to run the code (dependencies, etc.)
-        - Example output (what does it do?)
-        - Citations (data, code, papers)
+## Methods
+- **Preprocessing**: ICA artifact removal using automated ICLabel
+- **Feature Extraction**: Time/frequency domain, Hjorth parameters, CSP
+- **Models**: Random Forest, MLP, EEGNet (domain-specific CNN)
+- **Evaluation**: Classification accuracy on raw vs. ICA-cleaned data
 
-## Inspiration
+## Key Results
+| Model | Raw EEG | ICA Cleaned |
+|-------|---------|-------------|
+| Random Forest | 62.4% | 60.9% |
+| MLP | 66.1% | 66.7% |
+| **EEGNet** | **70.7%** | 68.4% |
 
-### Data & code
+**Finding**: ICA preprocessing did not consistently improve classification performance.
 
-- [The Incredible PyTorch](https://github.com/ritchieng/the-incredible-pytorch)
+## How to Run
 
-    > List of papers, code, examples using PyTorch
+### Prerequisites
+```bash
+pip install numpy pandas matplotlib seaborn scikit-learn scipy torch mne mne-icalabel
+```
 
-- [PhysioNet @ MIT](https://physionet.org)
+### Dataset Setup
+1. Download EEGMMIDB from: https://physionet.org/content/eegmmidb/1.0.0/
+2. Extract to `data/physionet.org/files/eegmmidb/1.0.0/`
 
-    > Research Resource for Complex Physiologic Signals
+### Execution
+```bash
+Project.ipynb
+```
 
-- [Kaggle](https://www.kaggle.com)
+## Output
+- Confusion matrices for each model/data combination
+- Training curves and performance comparisons
+- Classification accuracy metrics
+- Console logs with hyperparameter optimization results
 
-    > ML competition/collaboration site
+## Issues Overcome
 
-- [Keras code examples](https://keras.io/examples/)
+### 1. Channel Name Standardization
+**Problem**: Inconsistent EEG channel naming across files
+```python
+def clean_ch_name(ch):
+    ch = ch.strip('.')
+    if ch.startswith('Fc'): ch = 'FC' + ch[2:]
+    # ... additional mappings
+```
 
-    > Official examples of implementation using Google’s TensorFlow Keras
+### 2. Class Imbalance
+**Problem**: Majority class (Rest/Baseline Task) dominated dataset
+**Solutions**: 
+- Stratified train-test split
+- Class-weighted Random Forest
+- Focused analysis on per-class metrics
 
-- [PLOS papers with available data](https://journals.plos.org/plosone/search?q=data_availability%3A(osf.io%20OR%20github%20OR%20dryad%20OR%20figshare)&page=1)
+### 3. Poorly Annotated Data
+**Problem**: Some of the data produced corrupt task annotations and only had 1
+**Solutions**: Skip them
 
-    > Searching PLOS for keywords likely to have available data, refine further to get topics interesting to you
 
-- [PLOS recommended repositories](https://journals.plos.org/plosone/s/recommended-repositories) (data, code, and sometimes both)
+## Citations
+- **Dataset**: Goldberger et al. (2000). PhysioBank, PhysioToolkit, and PhysioNet. *Circulation*, 101(23), e215–e220.
+- **EEGNet**: Lawhern et al. (2018). EEGNet: a compact convolutional neural network for EEG-based brain–computer interfaces. *Journal of Neural Engineering*, 15(5), 056013.
 
-    > Lots here, mostly data repositories
-
-- [The Pudding](https://www.pudding.cool)
-
-    > Visual essays with data
-
-### Fun Examples
-
-- [SF Budget Visualization](https://missionlocal.org/2025/05/explore-san-francisco-2024-2025-budget/)
-- [Tuesday Night Movie Night (movie recommendations)](https://www.tuesdaynightmovienight.com/quiza)
-- [This course!](https://github.com/christopherseaman/datasci_223)
-    > Assignment you didn't like? Make a better version of it! Include an example solution and, as a stretch goal, automated grading.
+## Notes
+- Complete methodology, results, and discussion available in `FinalProject.pdf`
+- Code includes implementations adapted from published methods
+- ICA processing uses MNE-Python with automated component labeling
